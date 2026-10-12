@@ -1754,6 +1754,92 @@ button.visual-head:active:not(:disabled) {
   border-top: 1px solid var(--border);
 }
 
+.shots-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+}
+
+.shot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  max-width: min(420px, 100%);
+  margin: 0;
+}
+
+button.shot-thumb {
+  height: auto;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: zoom-in;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.shot-thumb:hover:not(:disabled) {
+    background: var(--bg-subtle);
+    border-color: var(--border-strong);
+  }
+}
+
+.shot-thumb img {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.shot figcaption {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  text-wrap: pretty;
+}
+
+.shot-zoom {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  cursor: zoom-out;
+  background: rgb(0 0 0 / 0.75);
+}
+
+.shot-zoom img {
+  min-height: 0;
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+.shot-zoom-caption {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 14px;
+  color: #ededed;
+}
+
+.shot-zoom-caption .num {
+  font-variant-numeric: tabular-nums;
+  color: #a1a1a1;
+}
+
+.shot-zoom-caption .hint {
+  font-size: 12px;
+  color: #a1a1a1;
+}
+
 .md p {
   max-width: 75ch;
   margin: 12px 0 0;

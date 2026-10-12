@@ -111,6 +111,34 @@ Rules:
   lockfile bump or a rename.
 - No raw HTML; it is shown as text.
 
+### Screenshots for UI chunks
+
+When a chunk changes what users see (a new screen, a layout, a state like
+empty or error), add `screenshots` so the user sees the result before reading
+the code. They show as thumbnails under the description; a click opens one
+full size.
+
+```json
+"screenshots": [
+  { "path": "/tmp/stackdiff-shots/login-before.png", "caption": "Before: no magic-link option" },
+  { "path": "/tmp/stackdiff-shots/login-after.png", "caption": "After: magic-link button under the form" }
+]
+```
+
+- Take them with whatever browser tool you have (a Playwright MCP, the
+  project's run skill, a headless browser). If you have none, or the app
+  will not run, skip screenshots; never block the review on them.
+- Only for chunks with a visible change. One to three per chunk: the main
+  state, plus the edge states the chunk adds. A before/after pair helps when
+  the chunk changes an existing screen.
+- Show the state with chunks 1..N in place when you can. If the screen only
+  works once a later chunk lands, say so in the caption ("full feature, after
+  chunk 6").
+- Crop to the part that changed, not the whole desktop.
+- Save them outside the repo (`/tmp/stackdiff-shots/`). `stackdiff plan`
+  copies them, so you can delete yours after. Formats: png, jpg, gif, webp.
+- Captions are short and plain: what state, and what to look at.
+
 ### The overview
 
 Before the chunks, write an overview: a markdown walkthrough shown as its own
@@ -150,6 +178,12 @@ newlines are `\n` (writing the file from a small script is easiest):
       "description": "New types for magic-link tokens. Check the expiry field.",
       "visual": "Tokens get a type and a hash helper; the store comes in chunk 3.\n\n```diff\n src/auth/\n+├── types.ts   # MagicToken\n └── token.ts\n+    hashToken()\n```",
       "hunks": ["src/auth/types.ts", "src/auth/token.ts#1"]
+    },
+    {
+      "title": "Magic-link button on the login page",
+      "description": "Adds the button and its loading state. Uses sendMagicLink from chunk 3.",
+      "screenshots": [{ "path": "/tmp/stackdiff-shots/login.png", "caption": "Login with the new button" }],
+      "hunks": ["src/pages/Login.tsx"]
     }
   ]
 }

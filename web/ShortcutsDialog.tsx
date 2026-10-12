@@ -12,6 +12,7 @@ const SHORTCUTS: [string[], string][] = [
   [["c"], "Chat with the agent"],
   [["u"], "Undo the last send or delete"],
   [["⌘", "↵"], "Save a message"],
+  [["←", "→"], "Switch screenshots when one is full size"],
   [["Esc"], "Close a panel or cancel"],
   [["?"], "This list"],
 ];

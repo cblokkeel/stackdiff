@@ -24,10 +24,17 @@ export interface DiffFile {
   hunks: DiffHunk[];
 }
 
+/** A picture of the UI the chunk changes. `path` is the agent's file until `stackdiff plan` stores it, then the stored name. */
+export interface Screenshot {
+  path: string;
+  caption?: string;
+}
+
 export interface PlanChunk {
   title: string;
   description?: string;
   visual?: string;
+  screenshots?: Screenshot[];
   hunks: string[];
 }
 
@@ -42,6 +49,11 @@ export interface Plan {
 export interface LineRanges {
   additions: [number, number][];
   deletions: [number, number][];
+}
+
+export interface ViewScreenshot {
+  url: string;
+  caption: string;
 }
 
 export interface ViewFile {
@@ -63,6 +75,7 @@ export interface ViewChunk {
   title: string;
   description: string;
   visual: string;
+  screenshots: ViewScreenshot[];
   files: ViewFile[];
   added: number;
   removed: number;

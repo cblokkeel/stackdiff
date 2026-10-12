@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { extname, join, resolve } from "node:path";
 import { currentBranch, fileAtCommit, findRepo, git, parseDiff, rawDiff, resolveBase } from "./git";
 import { applyMoves, buildChunks, followCode, locateComments, parsePlan } from "./plan";
 import { blobName, type Snapshot, sinceFile, snapshotFile, snapshotFiles } from "./since";
@@ -27,6 +27,9 @@ export interface ServerInfo {
 }
 
 const LISTENING_FRESH_MS = 4000;
+const IMAGE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+/** The name `stackdiff plan` gives a stored screenshot: its content hash and type. */
+export const STORED_IMAGE = /^[0-9a-f]{40}\.(png|jpe?g|gif|webp)$/;
 
 export class Store {
   readonly root: string;
@@ -181,6 +184,34 @@ export class Store {
     const used = new Set(Object.values(all).flatMap((s) => Object.values(s.files).map((f) => f.blob)));
     const dir = this.path("snapshots");
     for (const name of existsSync(dir) ? readdirSync(dir) : []) if (!used.has(name)) rmSync(join(dir, name));
+  }
+
+  /** What is wrong with the plan's screenshot files, resolving relative paths from `cwd`. */
+  checkScreenshots(plan: Plan, cwd: string): string[] {
+    return plan.chunks.flatMap((c, i) =>
+      (c.screenshots ?? []).flatMap(({ path }) => {
+        const where = `Chunk ${i + 1} ("${c.title}"): screenshot "${path}"`;
+        if (!IMAGE_TYPES.includes(extname(path).toLowerCase())) return [`${where} is not a ${IMAGE_TYPES.join(", ")} file.`];
+        if (!statSync(resolve(cwd, path), { throwIfNoEntry: false })?.isFile()) return [`${where} not found.`];
+        return [];
+      }),
+    );
+  }
+
+  /**
+   * Copies the plan's screenshots into `images/`, named by content, and points the plan at the copies,
+   * so the agent's files can go. Deletes copies no chunk uses any more.
+   */
+  storeScreenshots(plan: Plan, cwd: string) {
+    mkdirSync(this.path("images"), { recursive: true });
+    for (const shot of plan.chunks.flatMap((c) => c.screenshots ?? [])) {
+      const from = resolve(cwd, shot.path);
+      const name = blobName(readFileSync(from)) + extname(from).toLowerCase();
+      if (!existsSync(this.path(`images/${name}`))) copyFileSync(from, this.path(`images/${name}`));
+      shot.path = name;
+    }
+    const used = new Set(plan.chunks.flatMap((c) => (c.screenshots ?? []).map((s) => s.path)));
+    for (const name of readdirSync(this.path("images"))) if (!used.has(name)) rmSync(this.path(`images/${name}`));
   }
 
   /** Per file, the chunk against the code as last reviewed. */

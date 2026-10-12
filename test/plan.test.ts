@@ -83,6 +83,21 @@ test("parsePlan keeps a markdown overview and rejects any other type", () => {
   );
 });
 
+test("parsePlan checks screenshots, and chunks point at the stored copies", () => {
+  const bad = (screenshots: unknown) => JSON.stringify({ chunks: [{ title: "UI", hunks: [], screenshots }] });
+  const message = 'Chunk 1 ("UI"): "screenshots" must be an array of { "path", "caption" }.';
+  expect(() => parsePlan(bad("shot.png"))).toThrow(message);
+  expect(() => parsePlan(bad([{ caption: "no path" }]))).toThrow(message);
+  expect(() => parsePlan(bad([{ path: "a.png", caption: 3 }]))).toThrow(message);
+
+  const shots = [{ path: "abc.png", caption: "After: empty state" }, { path: "d e.png" }];
+  const [chunk] = buildChunks({ chunks: [{ title: "UI", hunks: ["src/math.ts"], screenshots: shots }] }, files, empty);
+  expect(chunk!.screenshots).toEqual([
+    { url: "/api/images/abc.png", caption: "After: empty state" },
+    { url: "/api/images/d%20e.png", caption: "" },
+  ]);
+});
+
 test("a file can be split across chunks, leftovers go to Not in plan", () => {
   const chunks = buildChunks(
     {

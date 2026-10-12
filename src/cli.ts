@@ -67,13 +67,16 @@ const commands: Record<string, Command> = {
     const plan = parsePlan(source === "-" ? await Bun.stdin.text() : readFileSync(source, "utf8"));
     if (values.overview) plan.overview = readFileSync(values.overview, "utf8");
     const files = await store.files();
-    const errors = checkPlan(plan, files);
+    const errors = [...checkPlan(plan, files), ...store.checkScreenshots(plan, process.cwd())];
     if (errors.length) throw new Error(`Plan not saved:\n- ${errors.join("\n- ")}`);
 
+    store.storeScreenshots(plan, process.cwd());
     store.writeJSON("plan.json", plan);
     const hunkCount = files.reduce((n, f) => n + f.hunks.length, 0);
-    const withOverview = plan.overview?.trim() ? ", with an overview" : "";
-    console.log(`Plan saved: ${plan.chunks.length} chunks covering ${hunkCount} hunks${withOverview}.`);
+    const shots = plan.chunks.reduce((n, c) => n + (c.screenshots?.length ?? 0), 0);
+    const extras = [plan.overview?.trim() && "an overview", shots && `${shots} screenshot${shots === 1 ? "" : "s"}`].filter(Boolean);
+    const withExtras = extras.length ? `, with ${extras.join(" and ")}` : "";
+    console.log(`Plan saved: ${plan.chunks.length} chunks covering ${hunkCount} hunks${withExtras}.`);
     const server = await findServer(store);
     console.log(server ? `UI: ${server.url}` : "Run `stackdiff open` to start the UI.");
   },

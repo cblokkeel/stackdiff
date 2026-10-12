@@ -7,10 +7,12 @@ import type {
   LineRanges,
   Plan,
   ReviewState,
+  Screenshot,
   Side,
   ViewChunk,
   ViewComment,
   ViewFile,
+  ViewScreenshot,
 } from "./types";
 
 export const UNPLANNED_TITLE = "Not in plan";
@@ -93,8 +95,19 @@ export function parsePlan(text: string): Plan {
       throw new Error(`Chunk ${i + 1} ("${c.title}") needs a "hunks" array of strings.`);
     if (c.visual !== undefined && typeof c.visual !== "string")
       throw new Error(`Chunk ${i + 1} ("${c.title}"): "visual" must be a markdown string.`);
+    if (c.screenshots !== undefined && !isScreenshotList(c.screenshots))
+      throw new Error(`Chunk ${i + 1} ("${c.title}"): "screenshots" must be an array of { "path", "caption" }.`);
   });
   return p;
+}
+
+function isScreenshotList(value: unknown): value is Screenshot[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (s) => s && typeof s.path === "string" && s.path.trim() && (s.caption === undefined || typeof s.caption === "string"),
+    )
+  );
 }
 
 export function checkPlan(plan: Plan, files: DiffFile[]): string[] {
@@ -176,6 +189,7 @@ interface ChunkSource {
   title: string;
   description: string;
   visual: string;
+  screenshots: ViewScreenshot[];
   hunks: DiffHunk[];
   unplanned: boolean;
 }
@@ -212,6 +226,7 @@ function chunksFromPlanKeepingLeftovers(plan: Plan, idx: HunkIndex): ChunkSource
       title: chunk.title,
       description: chunk.description ?? "",
       visual: chunk.visual ?? "",
+      screenshots: (chunk.screenshots ?? []).map(viewScreenshot),
       hunks,
       unplanned: false,
     });
@@ -223,6 +238,7 @@ function chunksFromPlanKeepingLeftovers(plan: Plan, idx: HunkIndex): ChunkSource
       title: UNPLANNED_TITLE,
       description: UNPLANNED_DESCRIPTION,
       visual: "",
+      screenshots: [],
       hunks: leftovers,
       unplanned: true,
     });
@@ -249,8 +265,12 @@ function takeUnplaced(pieces: Piece[], placed: Map<string, boolean[]>, idx: Hunk
   );
 }
 
+function viewScreenshot(s: Screenshot): ViewScreenshot {
+  return { url: `/api/images/${encodeURIComponent(s.path)}`, caption: s.caption ?? "" };
+}
+
 function oneChunkPerFile(files: DiffFile[]): ChunkSource[] {
-  return files.map((file) => ({ title: file.path, description: "", visual: "", hunks: file.hunks, unplanned: true }));
+  return files.map((file) => ({ title: file.path, description: "", visual: "", screenshots: [], hunks: file.hunks, unplanned: true }));
 }
 
 function sum<T>(items: T[], of: (item: T) => number): number {
@@ -270,6 +290,7 @@ function toChunkContent(source: ChunkSource, idx: HunkIndex): ChunkContent {
     title: source.title,
     description: source.description,
     visual: source.visual,
+    screenshots: source.screenshots,
     unplanned: source.unplanned,
     files,
     added: files.reduce((n, f) => n + f.added, 0),
