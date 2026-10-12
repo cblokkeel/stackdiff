@@ -43,12 +43,17 @@ The stackdiff skill teaches the agent these steps.
   "chunks": [
     { "title": "Token types", "description": "why and what to check",
       "visual": "optional markdown sketch",
+      "screenshots": [{ "path": "/tmp/shot.png", "caption": "optional" }],
       "hunks": ["src/auth/types.ts", "src/auth/token.ts#2"] }
   ]
 }
 ```
 
 A bare path takes every hunk in that file.
+
+`stackdiff plan` checks each screenshot exists and is a png, jpg, gif or webp,
+copies it into `images/` named by its content hash, and saves that name in
+`path`, so the agent's file can go.
 
 ## UI
 
@@ -84,6 +89,9 @@ A bare path takes every hunk in that file.
 - Chunk visual: optional `visual` markdown per chunk (call/file trees as
   `diff` blocks, pseudocode, `mermaid` diagrams), shown above the code in a
   collapsible panel. Open/closed is remembered for all chunks.
+- Chunk screenshots: optional `screenshots` per chunk, shown as a row of
+  thumbnails under the description, with captions. A click shows one full
+  size; ←/→ switch, Esc or a click closes.
 - Overview: optional `overview` markdown, shown as its own page before chunk
   1: how the change was thought and how it works, with the same sketches as
   chunk visuals. The page opens on it the first time; it stays at the top of
@@ -117,6 +125,8 @@ A bare path takes every hunk in that file.
 Stored in `$(git rev-parse --absolute-git-dir)/stackdiff/`, so it never shows
 up in the working tree and each worktree gets its own:
 
+- `images/` (chunk screenshots, named by content hash; ones no chunk uses get
+  deleted when the plan is saved).
 - `plan.json`, `review.json` (comments, reviews, approval marks),
   `server.json` (port, pid).
 - `reviewed.json` (per chunk you approved or commented on: how, its hash, each

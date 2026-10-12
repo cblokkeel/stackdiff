@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { rmSync, statSync } from "node:fs";
+import { existsSync, rmSync, statSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { codeVersionStamp, spawnServer, WEB_DIR } from "./daemon";
 import { snippetFor } from "./plan";
 import * as review from "./review";
-import type { Store } from "./store";
+import { STORED_IMAGE, type Store } from "./store";
 import type { ChatCode, CommentKind, CommentStatus, Side, Verdict } from "./types";
 
 type Params = Record<string, string>;
@@ -28,6 +28,17 @@ export function startServer(store: Store, port: number) {
     ["GET", "/api/state", async () => json(await store.view())],
 
     ["GET", "/api/version", async () => json({ version: await version() })],
+
+    [
+      "GET",
+      "/api/images/:name",
+      (_req, { name }) => {
+        if (!STORED_IMAGE.test(name!) || !existsSync(store.path(`images/${name}`))) return error("Not found.", 404);
+        return new Response(Bun.file(store.path(`images/${name}`)), {
+          headers: { "Cache-Control": "max-age=31536000, immutable" },
+        });
+      },
+    ],
 
     [
       "GET",

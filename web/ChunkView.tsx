@@ -1,5 +1,6 @@
 import { useDeferredValue } from "react";
 import type { ViewChunk, ViewComment } from "../src/types";
+import { ChunkScreenshots } from "./ChunkScreenshots";
 import { ChunkVisual } from "./ChunkVisual";
 import { type DiffStyle, FileBlock } from "./FileBlock";
 import { plural } from "./text";
@@ -57,6 +58,7 @@ export function ChunkView(props: {
         {chunk.description && <p className="desc">{chunk.description}</p>}
         {chunk.files.length > 1 && <FileList chunk={chunk} />}
         {chunk.visual && <ChunkVisual source={chunk.visual} open={props.visualOpen} onToggle={props.onToggleVisual} />}
+        {chunk.screenshots.length > 0 && <ChunkScreenshots key={chunk.key} shots={chunk.screenshots} />}
         {chunk.sinceReview && (
           <div className="since-bar">
             <span>

@@ -18,7 +18,7 @@ export interface Snapshot {
   files: Record<string, SnapshotFile>;
 }
 
-export function blobName(content: string): string {
+export function blobName(content: string | Uint8Array): string {
   return createHash("sha1").update(content).digest("hex");
 }
 

@@ -31,6 +31,8 @@ The agent then runs `stackdiff hunks`, writes a plan, runs `stackdiff plan`,
 
 In the browser:
 
+- Chunks that change the UI can carry **screenshots**. Click one to see it
+  full size; ←/→ switch, Esc closes.
 - The page opens on the **Overview**: how the agent thought about the change
   and how it works, with diagrams. Reopen it from the sidebar or with `o`.
 - `j` / `k` to move between chunks, `s` to send a chunk's messages, `a` to approve it, `]` for the sidebar, `u` to undo, `?` for all shortcuts.
