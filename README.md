@@ -13,8 +13,12 @@ See [SPEC.md](SPEC.md) for the design.
 cd stackdiff
 bun install
 bun run build
-bun link        # puts `stackdiff` on your PATH
+bun link                  # puts `stackdiff` on your PATH
+stackdiff install-skill   # links skills/stackdiff into ~/.claude/skills and ~/.agents/skills
 ```
+
+The skill is a symlink to this repo, so edits to `skills/stackdiff/SKILL.md`
+reach your agents at once. Run `install-skill` again if you move the repo.
 
 ## Use it
 
@@ -70,6 +74,7 @@ In the browser:
 | `stackdiff resolve <id...> [-m msg]` | Close a comment thread |
 | `stackdiff chat -m msg` | Answer the user in the chat panel |
 | `stackdiff status` / `stop` | Status, stop server |
+| `stackdiff install-skill` | Link the agent skill into `~/.claude` and `~/.agents` |
 
 State lives in `.git/stackdiff/` of each worktree.
 
@@ -88,6 +93,8 @@ State lives in `.git/stackdiff/` of each worktree.
 | `src/store.ts` | The state dir in `.git/stackdiff/`: read/write JSON, build the view |
 | `src/format.ts` | Text the agent reads: reviews, hunks, status |
 | `src/types.ts` | Types shared by server and UI |
+| `src/skill.ts` | `install-skill`: link `skills/stackdiff` into agent homes |
+| `skills/stackdiff/SKILL.md` | The skill that tells agents how to use stackdiff |
 | `web/reviewState.ts` | Server state + optimistic updates + polling |
 | `web/actions.ts` | Every reviewer action: update the screen, then send the request |
 | `web/App.tsx` | Page layout, navigation, shortcuts, panels |

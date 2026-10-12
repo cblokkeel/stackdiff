@@ -8,6 +8,7 @@ import { resolveBase } from "./git";
 import { checkPlan, parsePlan } from "./plan";
 import * as review from "./review";
 import { startServer } from "./server";
+import { installSkill } from "./skill";
 import { Store } from "./store";
 import type { DiffFile, DiffHunk } from "./types";
 
@@ -24,6 +25,7 @@ Usage:
   stackdiff chat -m <message>                    Answer the user in the chat panel
   stackdiff status                               Show URL, plan and comment counts
   stackdiff stop                                 Stop the server
+  stackdiff install-skill                        Link the stackdiff skill into ~/.claude and ~/.agents
 `;
 
 const WAIT_SECS_UNDER_HARNESS_COMMAND_TIMEOUT = 9 * 60;
@@ -168,9 +170,15 @@ function answerThreads(store: Store, ids: string[], message: string | undefined,
   });
 }
 
+// Runs outside any repo, so it takes no Store.
+function printInstalledSkill() {
+  for (const { path, status } of installSkill()) console.log(`${status}: ${path}`);
+}
+
 async function main() {
   const [name, ...rest] = process.argv.slice(2);
   if (!name || name === "help" || name === "--help" || name === "-h") return console.log(HELP);
+  if (name === "install-skill") return printInstalledSkill();
 
   if (!Object.hasOwn(commands, name)) throw new Error(`Unknown command "${name}".\n\n${HELP}`);
   const command = commands[name]!;
