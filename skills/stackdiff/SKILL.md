@@ -186,11 +186,62 @@ until a review arrives; do not end your turn.
 
 `wait` prints each comment thread with an id (`c3`), the file, lines, code and
 the whole conversation so far. Messages marked "(new)" are the ones to answer.
-For each thread:
 
-- You made the change: `stackdiff resolve c3 -m "what you changed"`.
-- You have a question, disagree, or need a decision:
-  `stackdiff reply c3 -m "..."`. The thread stays open for the user.
+A review can go many rounds, so keep your own context small: you think, and
+subagents write the code. You decide what each comment needs; they do the
+reading and editing it takes to get there, and send back a short report.
+
+### Sort the threads
+
+Read every new message first, then put each thread in one of three groups:
+
+- **Reply only**: a question, a point you disagree with, or a decision the
+  user must make. Answer with `stackdiff reply c3 -m "..."`. The thread stays
+  open for the user. No code changes.
+- **Tiny fix**: one or two lines in one file, and the code is already in the
+  `wait` output. Make it yourself.
+- **Code change**: anything else. Hand it to a subagent.
+
+### Work out each code change
+
+For each code-change thread, find out what the user wants and how to do it.
+Read only what you need to decide: the lines around the comment, the names it
+touches. If you still can't tell what the user wants, reply with a question
+instead of guessing.
+
+Write down the decision for each one: what changes, in which files, and why.
+That is the brief.
+
+### Hand the work to subagents
+
+Group the threads into tasks. Threads that touch the same file, or depend on
+each other, go in the same task. Start tasks that share no files at once (in
+parallel); run the rest one after another.
+
+Give each subagent a brief it can act on alone. It has not seen this chat:
+
+- The thread ids, and each comment in the user's words.
+- File paths and line numbers.
+- Your decision: what to change and why, and any approach you ruled out.
+- Limits: change only what the brief asks; never commit, stage, branch or
+  stash; never run `stackdiff`; add or update tests for changed behavior; run
+  the tests and type check for the files it touched.
+- The report to send back, and nothing else: the files it changed, one line
+  per thread on what it did, the test and type check result, and anything it
+  was unsure of or could not do. No diffs, no file contents.
+
+If your agent has no way to start subagents, make the changes yourself.
+
+### Check and resolve
+
+When the reports come back:
+
+1. Run `git diff --stat` to confirm only the expected files changed.
+2. If a report flags a failure or a doubt, fix it (or send a follow-up brief)
+   before resolving. If you can't fix it, reply on the thread with what is
+   wrong.
+3. Resolve each thread with what changed:
+   `stackdiff resolve c3 -m "what you changed"`.
 
 The user can reply to any thread, resolved ones too, so later reviews may bring
 follow-ups ("· follow-up" in the heading). Read the history before answering.
